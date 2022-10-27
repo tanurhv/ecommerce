@@ -51,6 +51,40 @@ app.get('/checkVersion/:version', (req, res) => {
     }
 })
 
+//User Register API
+
+app.post('/register', (req, res) => {
+    const db = app.locals.db;
+    let name = req.body.name;
+    let email = req.body.email;
+
+    let newOTP = Math.floor(Math.random() * 9000) + 1000;
+
+    const otpCollections = db.collection('otp');
+
+    otpCollections.find({ 'email': email }).limit(1).sort({ _id: -1 }).toArray(function (err, result) {
+        if (err) {
+            console.log(err.message);
+        } else if (result.length) {
+
+            otpCollections.updateOne({ 'email': email }, { $set: { 'otp': newOTP } }, function (err, object) { });
+            console.log("OTP updated successfully");
+        } else {
+            let data = { 'email': email, 'name': name, 'otp': newOTP };
+            otpCollections.insertOne(data, function (err, result) {
+                if (err) {
+                    res.end("Registration failed");
+                    console.warn(err.message);
+                }
+            });
+        }
+    })
+
+    res.json({ 'email': email, 'name': name, 'register': true, 'msg': 'Register successful' });
+})
+
+
+
 app.listen(port, () => {
     console.log(`Ecommerce app listening at http://localhost:${port}`)
 })
