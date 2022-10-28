@@ -84,6 +84,46 @@ app.post('/register', (req, res) => {
 })
 
 
+//OTP verify
+
+app.post('/otpVerify', (req, res) => {
+    const db = app.locals.db;
+    let id = uuid.v4();
+    let email = req.body.email;
+    let otp = req.body.otp;
+
+    const otpCollections = db.collection('otp');
+    const userCollections = db.collection('user');
+
+    otpCollections.find({ 'email': email, 'otp': otp }).limit(1).sort({ _id: -1 }).toArray(function (err, result) {
+        if (err) {
+            console.log("Error occured: " + err.message);
+        } else if (result.length) {
+            let name = String(result[0]["name"]);
+            userCollections.find({ 'email': email }).limit(1).sort({ _id: -1 }).toArray(function (err, result) {
+                if (err) {
+                    console.log("Error: " + err.message);
+                } else if (result.length) {
+
+                    userCollections.updateOne({ 'email': email }, { $set: { "akey": id } }, function (err, result) { });
+                } else {
+                    let data = { 'email': email, 'name': name, "akey": id };
+                    userCollections.insertOne(data, function (err, result) {
+                        if (err) {
+                            res.end("Registration failed");
+                            console.warn(err.message);
+                        }
+                    });
+                }
+            });
+
+            res.json({ "email": email, "otpVerify": true, "msg": "login sucessfull", "akey": id });
+        } else {
+            res.json({ "email": email, "otpVerify": false, "msg": "login failed" });
+        }
+    })
+})
+
 
 app.listen(port, () => {
     console.log(`Ecommerce app listening at http://localhost:${port}`)
