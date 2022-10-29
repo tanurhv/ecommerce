@@ -125,6 +125,32 @@ app.post('/otpVerify', (req, res) => {
 })
 
 
+//Get user info but by authorized user only
+
+app.get('/user/:key', (req, res) => {
+    const db = app.locals.db;
+    let key = req.params.key;
+    const userCollection = db.collection('user');
+    userCollection.find({ 'akey': key }).limit(1).sort({ _id: -1 }).toArray((err, result) => {
+        if (err) {
+            console.log(err)
+        } else if (result.length) {
+            userCollection.find({}).sort({ _id: -1 }).toArray((err2, result2) => {
+                if (err2) {
+                    console.log(err2)
+                } else if (result2.length) {
+                    res.json({'result': true, 'data': result2})
+                } else {
+                    res.json({'result': true, 'data': []})
+                }
+            })
+        } else {
+            res.json({'result': false, msg: 'You are not authorized', 'data': []})
+        }
+    })
+})
+
+
 app.listen(port, () => {
     console.log(`Ecommerce app listening at http://localhost:${port}`)
 })
