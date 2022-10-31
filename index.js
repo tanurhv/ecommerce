@@ -167,6 +167,36 @@ app.get('/productList', (req, res) => {
 })
 
 
+//Get product list only for registered user
+
+app.get('/products/:key', (req, res) => {
+    const db = app.locals.db;
+    let key = req.params.key;
+    let userCollections = db.collection('user');
+    let productsCollections = db.collection('products');
+
+
+    userCollections.find({ 'akey': key }).limit(1).sort({ _id: -1 }).toArray(function (err, result) {
+        if (err) {
+            console.log("Error occured " + err.message);
+        } else if (result.length) {
+            productsCollections.find({}).limit(50).sort({ _id: -1 }).toArray(function (err2, result2) {
+                if (err2) {
+                    console.log(err2);
+                } else if (result2.length) {
+                    res.json({ "result": true, "found": result2.length, "data": result2 });
+                } else {
+                    res.json({ "result": false, "data": [] });
+                }
+            })
+        } else {
+            res.json({ "result": false, "msg": "you are not authorized", "data": [] });
+        }
+    });
+
+})
+
+
 app.listen(port, () => {
     console.log(`Ecommerce app listening at http://localhost:${port}`)
 })
