@@ -151,6 +151,22 @@ app.get('/user/:key', (req, res) => {
 })
 
 
+//Product Listing API
+
+app.get('/productList', (req, res) => {
+    const db = app.locals.db;
+    const productList = db.collection('products');
+    productList.find({}).limit(50).sort({ _id: -1 }).toArray(function (err, result) {
+        if (err) {
+            res.status(400).send("Error fetching listening!");
+        } else {
+            res.json(result);
+        }
+    })
+    //res.json({ "result": true, "msg": "product list" })
+})
+
+
 app.listen(port, () => {
     console.log(`Ecommerce app listening at http://localhost:${port}`)
 })
